@@ -14,23 +14,27 @@ app.use(cors())
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json()) // analyse les données entrante dans l'api, voir la doc express
 
-db.sequelize.sync({ force: true }).then(() => { // force: true permet de supprimer les tables existantes et de les recréer (juste pour le développement)
-  console.log('Drop and Resync Db') // en prod, juste sync sans parametre
+// db.sequelize.sync({ force: true }).then(() => { // force: true permet de supprimer les tables existantes et de les recréer (juste pour le développement)
+//   console.log('Drop and Resync Db') // en prod, juste sync sans parametre
+//   initial()
+// })
+
+db.sequelize.sync().then(() => {
   initial()
 })
 
 const initial = () => {
-  Role.create({
+  Role.upsert({
     id: 1,
     name: 'user'
   })
 
-  Role.create({
+  Role.upsert({
     id: 2,
     name: 'moderator'
   })
 
-  Role.create({
+  Role.upsert({
     id: 3,
     name: 'admin'
   })
@@ -43,6 +47,7 @@ app.get('/', (req, res) => {
 require('./app/routes/auth.routes')(app)
 require('./app/routes/user.routes')(app)
 require('./app/routes/place.routes')(app)
+require('./app/routes/feature.routes')(app)
 
 // set port, listen for requests
 const PORT = process.env.PORT || 4000

@@ -1,6 +1,8 @@
 const { extractIdFromRequestAuthHeader } = require('../helpers/tokenHelper')
 const db = require('../models')
 const Place = db.place
+const Feature = db.feature
+const Op = db.Sequelize.Op
 
 exports.createPlace = (req, res) => {
   const id = extractIdFromRequestAuthHeader(req)
@@ -16,6 +18,22 @@ exports.createPlace = (req, res) => {
     userId: id
   })
     .then(place => {
+      if (req.body.features) {
+        // if features are present, add them to the place
+        Feature.findAll({
+          where: {
+            name: {
+              [Op.in]: req.body.features
+            }
+          }
+        })
+          .then(features => {
+            place.setFeatures(features)
+          })
+          .catch(err => {
+            res.status(500).send({ message: err.message })
+          })
+      }
       res.status(200).send({
         message: 'Place was created successfully!',
         place
@@ -26,50 +44,59 @@ exports.createPlace = (req, res) => {
     })
 }
 
-exports.getPlaces = (req, res) => {
-  Place.findAll({
-    include: [
-      {
-        model: db.user,
-        attributes: ['firstName', 'lastName', 'email']
-      }
-    ]
-  })
-    .then(places => {
-      res.status(200).send({
-        message: 'Places were retrieved successfully!',
-        places
-      })
-    })
-    .catch(err => {
-      res.status(500).send({ message: err.message })
-    })
-}
-
 exports.getPlace = (req, res) => {
-  Place.findOne({
-    where: {
-      id: req.params.id
-    },
-    include: [
-      {
-        model: db.user,
-        attributes: ['firstName', 'lastName', 'email']
-      }
-    ]
-  })
-    .then(place => {
-      if (!place) {
-        return res.status(404).send({ message: 'Place Not found.' })
-      }
-      res.status(200).send({
-        message: 'Place was retrieved successfully!',
-        place
+  const id = req.query.id
+
+  if (id) {
+    // if id is present, get the place with the given id
+    Place.findOne({
+      where: {
+        id
+      },
+      include: [
+        {
+          model: db.user,
+          attributes: ['firstName', 'lastName', 'email']
+        },
+        {
+          model: db.feature,
+          attributes: ['name']
+        }
+      ]
+    })
+      .then(place => {
+        res.status(200).send({
+          message: 'Place was retrieved successfully!',
+          place
+        })
       })
+      .catch(err => {
+        res.status(500).send({ message: err.message })
+      })
+  } else {
+    // if id is not present, get all places
+    Place.findAll({
+      include: [
+        {
+          model: db.user,
+          attributes: ['firstName', 'lastName', 'email']
+        },
+        {
+          model: db.feature,
+          attributes: ['name']
+        }
+      ]
     })
-    .catch(err => {
-      res.status(500).send({ message: err.message })
-    })
+      .then(places => {
+        res.status(200).send({
+          message: 'Places were retrieved successfully!',
+          places
+        })
+      })
+      .catch(err => {
+        res.status(500).send({ message: err.message })
+      })
+  }
 }
 
 exports.updatePlace = (req, res) => {
@@ -78,7 +105,7 @@ exports.updatePlace = (req, res) => {
   // find place by id
   Place.findOne({
     where: {
-      id: req.body.id
+      id: req.query.id
     }
   })
     .then(place => {
@@ -116,7 +143,7 @@ exports.deletePlace = (req, res) => {
   // find place by id
   Place.findOne({
     where: {
-      id: req.body.id
+      id: req.query.id
     }
   })
     .then(place => {

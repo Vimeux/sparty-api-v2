@@ -20,11 +20,6 @@ module.exports = function (app) {
 
   app.get(
     '/api/place',
-    controller.getPlaces
-  )
-
-  app.get(
-    '/api/place/:id',
     controller.getPlace
   )
 
