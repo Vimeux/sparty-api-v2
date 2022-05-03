@@ -17,7 +17,7 @@ const sequelize = new Sequelize(
     }
   }
 )
-
+// define models
 const db = {}
 db.Sequelize = Sequelize
 db.sequelize = sequelize
@@ -28,6 +28,7 @@ db.feature = require('../models/feature.model.js')(sequelize, Sequelize)
 db.city = require('../models/city.model.js')(sequelize, Sequelize)
 db.placeType = require('../models/placeType.model.js')(sequelize, Sequelize)
 db.party = require('../models/party.model.js')(sequelize, Sequelize)
+db.product = require('../models/product.model.js')(sequelize, Sequelize)
 
 // relation between user and role
 db.role.belongsToMany(db.user, {
@@ -78,6 +79,25 @@ db.user.hasMany(db.party, {
   foreignKey: 'userId'
 })
 db.party.belongsTo(db.user)
+
+// relation between party and product
+const PartyProduct = sequelize.define('partyProduct', {
+  quantity: {
+    type: Sequelize.INTEGER
+  }
+}, { timestamps: false })
+
+db.party.belongsToMany(db.product, {
+  through: PartyProduct,
+  foreignKey: 'partyId',
+  otherKey: 'productId'
+})
+
+db.product.belongsToMany(db.party, {
+  through: PartyProduct,
+  foreignKey: 'productId',
+  otherKey: 'partyId'
+})
 
 db.ROLES = ['user', 'admin', 'moderator']
 module.exports = db
