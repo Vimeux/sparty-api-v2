@@ -80,9 +80,7 @@ exports.updateCity = (req, res) => {
               res.status(500).send({ message: err.message })
             })
         } else {
-          res.status(404).send({
-            message: 'City not found!'
-          })
+          res.status(404).send({ message: 'City not found!' })
         }
       })
       .catch(err => {
@@ -109,17 +107,13 @@ exports.deleteCity = (req, res) => {
         if (city) {
           city.destroy()
             .then(city => {
-              res.status(200).send({
-                message: 'City was deleted successfully!'
-              })
+              res.status(200).send({ message: 'City was deleted successfully!' })
             })
             .catch(err => {
               res.status(500).send({ message: err.message })
             })
         } else {
-          res.status(404).send({
-            message: 'City not found!'
-          })
+          res.status(404).send({ message: 'City not found!' })
         }
       })
       .catch(err => {
