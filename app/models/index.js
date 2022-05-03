@@ -27,6 +27,7 @@ db.place = require('../models/place.model.js')(sequelize, Sequelize)
 db.feature = require('../models/feature.model.js')(sequelize, Sequelize)
 db.city = require('../models/city.model.js')(sequelize, Sequelize)
 db.placeType = require('../models/placeType.model.js')(sequelize, Sequelize)
+db.party = require('../models/party.model.js')(sequelize, Sequelize)
 
 // relation between user and role
 db.role.belongsToMany(db.user, {
@@ -71,6 +72,12 @@ db.feature.belongsToMany(db.place, {
   foreignKey: 'featureId',
   otherKey: 'placeId'
 })
+
+// relation between user and party
+db.user.hasMany(db.party, {
+  foreignKey: 'userId'
+})
+db.party.belongsTo(db.user)
 
 db.ROLES = ['user', 'admin', 'moderator']
 module.exports = db
