@@ -22,19 +22,44 @@ const verifyToken = (req, res, next) => {
 }
 
 const isAdmin = (req, res, next) => {
-  User.findByPk(req.userId).then(user => {
-    user.getRoles().then(roles => {
-      for (let i = 0; i < roles.length; i++) {
-        if (roles[i].name === 'admin') {
-          next()
-          return
-        }
+  const token = req.headers['x-access-token']
+  if (token) {
+    jwt.verify(token, config.secret, (err, decoded) => {
+      if (err) {
+        return res.status(401).send({
+          message: 'Unauthorized!'
+        })
       }
-      res.status(403).send({
-        message: 'Require Admin Role!'
+      req.userId = decoded.id
+      User.findByPk(req.userId).then(user => {
+        user.getRoles().then(roles => {
+          for (let i = 0; i < roles.length; i++) {
+            if (roles[i].name === 'admin') {
+              next()
+              return
+            }
+          }
+          res.status(403).send({
+            message: 'Require Admin Role!'
+          })
+        })
       })
     })
-  })
+  } else {
+    User.findByPk(req.userId).then(user => {
+      user.getRoles().then(roles => {
+        for (let i = 0; i < roles.length; i++) {
+          if (roles[i].name === 'admin') {
+            next()
+            return
+          }
+        }
+        res.status(403).send({
+          message: 'Require Admin Role!'
+        })
+      })
+    })
+  }
 }
 
 const isModerator = (req, res, next) => {
