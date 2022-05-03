@@ -1,6 +1,7 @@
 const { extractIdFromRequestAuthHeader } = require('../helpers/tokenHelper')
 const db = require('../models')
 const Party = db.party
+const Product = db.product
 
 exports.createParty = (req, res) => {
   const id = extractIdFromRequestAuthHeader(req)
@@ -17,6 +18,26 @@ exports.createParty = (req, res) => {
     userId: id
   })
     .then(party => {
+      if (req.body.products) {
+        const products = req.body.products
+        products.forEach(product => {
+          console.log(product)
+          const quantity = product.quantity
+          Product.findOne({
+            where: {
+              name: product.name
+            }
+          })
+            .then(product => {
+              // add product and the quantity to the party
+              party.addProduct(product, { through: { quantity } })
+            })
+
+            .catch(err => {
+              res.status(500).send({ message: err.message })
+            })
+        })
+      }
       res.status(200).send({
         message: 'Party was created successfully!',
         party
@@ -36,7 +57,15 @@ exports.getParty = (req, res) => {
       Party.findOne({
         where: {
           id: req.query.id
-        }
+        },
+        include: [
+          {
+            model: Product,
+            through: {
+              attributes: ['quantity']
+            }
+          }
+        ]
       })
         .then(party => {
           // if place is not found
@@ -57,7 +86,15 @@ exports.getParty = (req, res) => {
       Party.findAll({
         where: {
           userId: id
-        }
+        },
+        include: [
+          {
+            model: Product,
+            through: {
+              attributes: ['quantity']
+            }
+          }
+        ]
       })
         .then(parties => {
           // if no parties are found
