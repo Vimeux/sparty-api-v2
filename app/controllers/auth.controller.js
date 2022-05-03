@@ -27,24 +27,16 @@ exports.signup = (req, res) => {
           }
         }).then(roles => {
           user.setRoles(roles)
-          // .then(() => {
-          //   res.send({ message: 'User was registered successfully!' })
-          // })
         })
       } else {
         // si l'utilisateur n'a pas de rôle dans la requête, on lui attribue le rôle user par défaut
         // user role = 1
         user.setRoles([1])
-        // .then(() => {
-        //   res.send({ message: 'User was registered successfully!' })
-        // })
       }
       // génération du token
       generateToken({ id: user.id }, (error, token) => {
         if (error) return res.status(500).send('Error while genrating token')
-        // return res.send({
-        //   user, token
-        // })
+
         const authorities = []
         user.getRoles().then(roles => {
           for (let i = 0; i < roles.length; i++) {
@@ -69,9 +61,7 @@ exports.signin = (req, res) => {
     }
   })
     .then(user => {
-      if (!user) {
-        return res.status(404).send({ message: 'User Not found.' })
-      }
+      if (!user) return res.status(404).send({ message: 'User Not found.' })
       const passwordIsValid = bcrypt.compareSync(
         req.body.password,
         user.password
@@ -85,9 +75,7 @@ exports.signin = (req, res) => {
       // génération du token
       generateToken({ id: user.id }, (error, token) => {
         if (error) return res.status(500).send('Error while genrating token')
-        // return res.send({
-        //   user, token
-        // })
+
         const authorities = []
         user.getRoles().then(roles => {
           for (let i = 0; i < roles.length; i++) {
@@ -135,9 +123,7 @@ exports.deleteUser = (req, res) => {
       if (!user) {
         return res.status(404).send({ message: 'User Not found.' })
       } else {
-        res.send({
-          message: 'User deleted successfully!'
-        })
+        res.send({ message: 'User deleted successfully!' })
       }
     })
 }

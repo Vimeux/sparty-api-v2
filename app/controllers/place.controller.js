@@ -6,7 +6,7 @@ const Op = db.Sequelize.Op
 
 exports.createPlace = (req, res) => {
   const id = extractIdFromRequestAuthHeader(req)
-  const { name, description, address, latitude, longitude, maxPersons, price, features, cityId } = req.body
+  const { name, description, address, latitude, longitude, maxPersons, price, features, cityId, placeTypeId } = req.body
 
   if (!name || !description || !address || !latitude || !longitude || !maxPersons || !price) {
     return res.status(400).send({ message: 'Please fill all the required fields.' })
@@ -22,7 +22,8 @@ exports.createPlace = (req, res) => {
     maxPersons,
     price,
     userId: id,
-    cityId
+    cityId,
+    placeTypeId
   })
     .then(place => {
       if (features) {
@@ -72,6 +73,10 @@ exports.getPlace = (req, res) => {
         {
           model: db.city,
           attributes: ['name']
+        },
+        {
+          model: db.placeType,
+          attributes: ['name']
         }
       ]
     })
@@ -98,6 +103,10 @@ exports.getPlace = (req, res) => {
         },
         {
           model: db.city,
+          attributes: ['name']
+        },
+        {
+          model: db.placeType,
           attributes: ['name']
         }
       ]
@@ -139,7 +148,8 @@ exports.updatePlace = (req, res) => {
           longitude: req.body.longitude,
           maxPersons: req.body.maxPersons,
           price: req.body.price,
-          cityId: req.body.cityId
+          cityId: req.body.cityId,
+          placeTypeId: req.body.placeTypeId
         })
         .then(() => {
           if (req.body.features) {

@@ -68,9 +68,7 @@ exports.updateFeature = (req, res) => {
       }
     })
       .then(feature => {
-        if (!feature) {
-          return res.status(404).send({ message: 'Feature Not found.' })
-        }
+        if (!feature) return res.status(404).send({ message: 'Feature Not found.' })
         feature.update({
           name: req.body.name
         })

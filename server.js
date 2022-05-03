@@ -49,6 +49,7 @@ require('./app/routes/user.routes')(app)
 require('./app/routes/place.routes')(app)
 require('./app/routes/feature.routes')(app)
 require('./app/routes/city.routes')(app)
+require('./app/routes/placeType.routes')(app)
 
 // set port, listen for requests
 const PORT = process.env.PORT || 4000
