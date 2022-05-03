@@ -19,7 +19,7 @@ app.use(express.json()) // analyse les données entrante dans l'api, voir la doc
 //   initial()
 // })
 
-db.sequelize.sync().then(() => {
+db.sequelize.sync({ alter: true }).then(() => {
   initial()
 })
 
@@ -48,6 +48,7 @@ require('./app/routes/auth.routes')(app)
 require('./app/routes/user.routes')(app)
 require('./app/routes/place.routes')(app)
 require('./app/routes/feature.routes')(app)
+require('./app/routes/city.routes')(app)
 
 // set port, listen for requests
 const PORT = process.env.PORT || 4000

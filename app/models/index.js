@@ -25,6 +25,7 @@ db.user = require('../models/user.model.js')(sequelize, Sequelize)
 db.role = require('../models/role.model.js')(sequelize, Sequelize)
 db.place = require('../models/place.model.js')(sequelize, Sequelize)
 db.feature = require('../models/feature.model.js')(sequelize, Sequelize)
+db.city = require('../models/city.model.js')(sequelize, Sequelize)
 
 // relation between user and role
 db.role.belongsToMany(db.user, {
@@ -42,6 +43,13 @@ db.user.belongsToMany(db.role, {
 // relation user has many places and place has one user
 db.user.hasMany(db.place)
 db.place.belongsTo(db.user)
+
+// relation between place and city
+db.city.hasMany(db.place, {
+  foreignKey: 'cityId',
+  onDelete: 'NO ACTION'
+})
+db.place.belongsTo(db.city)
 
 // relation between place and feature
 db.place.belongsToMany(db.feature, {

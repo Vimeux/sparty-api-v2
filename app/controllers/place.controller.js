@@ -6,24 +6,31 @@ const Op = db.Sequelize.Op
 
 exports.createPlace = (req, res) => {
   const id = extractIdFromRequestAuthHeader(req)
+  const { name, description, address, latitude, longitude, maxPersons, price, features, cityId } = req.body
+
+  if (!name || !description || !address || !latitude || !longitude || !maxPersons || !price) {
+    return res.status(400).send({ message: 'Please fill all the required fields.' })
+  }
+
   // Save Place to data base
   Place.create({
-    name: req.body.name,
-    description: req.body.description,
-    address: req.body.address,
-    latitude: req.body.latitude,
-    longitude: req.body.longitude,
-    maxPersons: req.body.maxPersons,
-    price: req.body.price,
-    userId: id
+    name,
+    description,
+    address,
+    latitude,
+    longitude,
+    maxPersons,
+    price,
+    userId: id,
+    cityId
   })
     .then(place => {
-      if (req.body.features) {
+      if (features) {
         // if features are present, add them to the place
         Feature.findAll({
           where: {
             name: {
-              [Op.in]: req.body.features
+              [Op.in]: features
             }
           }
         })
@@ -61,6 +68,10 @@ exports.getPlace = (req, res) => {
         {
           model: db.feature,
           attributes: ['name']
+        },
+        {
+          model: db.city,
+          attributes: ['name']
         }
       ]
     })
@@ -83,6 +94,10 @@ exports.getPlace = (req, res) => {
         },
         {
           model: db.feature,
+          attributes: ['name']
+        },
+        {
+          model: db.city,
           attributes: ['name']
         }
       ]
@@ -123,7 +138,8 @@ exports.updatePlace = (req, res) => {
           latitude: req.body.latitude,
           longitude: req.body.longitude,
           maxPersons: req.body.maxPersons,
-          price: req.body.price
+          price: req.body.price,
+          cityId: req.body.cityId
         })
         .then(() => {
           if (req.body.features) {
