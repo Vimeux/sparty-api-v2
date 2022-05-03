@@ -126,6 +126,22 @@ exports.updatePlace = (req, res) => {
           price: req.body.price
         })
         .then(() => {
+          if (req.body.features) {
+            // if features are present, add them to the place
+            Feature.findAll({
+              where: {
+                name: {
+                  [Op.in]: req.body.features
+                }
+              }
+            })
+              .then(features => {
+                place.setFeatures(features)
+              })
+              .catch(err => {
+                res.status(500).send({ message: err.message })
+              })
+          }
           res.status(200).send({
             message: 'Place was updated successfully!',
             place
