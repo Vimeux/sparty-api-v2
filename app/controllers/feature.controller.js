@@ -1,125 +1,102 @@
 const db = require('../models')
 const Feature = db.feature
 
-exports.createFeature = (req, res) => {
+exports.createFeature = async (req, res) => {
   // Save Place to data base
-  Feature.create({
-    name: req.body.name
-  })
-    .then(feature => {
+  const { name } = req.body
+
+  if (!name) return res.status(400).send({ message: 'Please fill all the required fields.' })
+
+  try {
+    const feature = await Feature.create({
+      name
+    })
+
+    res.status(201).send({
+      message: 'Feature was created successfully!',
+      feature
+    })
+  } catch (error) {
+    res.status(500).send({ message: error.message })
+  }
+}
+
+exports.getFeature = async (req, res) => {
+  const id = req.query.id
+
+  try {
+    if (id) {
+      const feature = await Feature.findOne({
+        where: {
+          id
+        }
+      })
+
       res.status(200).send({
-        message: 'Feature was created successfully!',
+        message: 'Feature was found successfully!',
         feature
       })
-    })
-    .catch(err => {
-      res.status(500).send({ message: err.message })
-    })
-}
+    } else {
+      const features = await Feature.findAll()
 
-exports.getFeature = (req, res) => {
-  const id = req.query.id
-
-  if (id) {
-    // if id is present, get the feature with the given id
-    Feature.findOne({
-      where: {
-        id
-      }
-    })
-      .then(feature => {
-        res.status(200).send({
-          message: 'Feature was retrieved successfully!',
-          feature
-        })
+      res.status(200).send({
+        message: 'Features were found successfully!',
+        features
       })
-      .catch(err => {
-        res.status(500).send({ message: err.message })
-      })
-  } else {
-    // if id is not present, get all features
-    Feature.findAll()
-      .then(features => {
-        if (features.length <= 0) {
-          res.status(200).send({
-            message: 'No features found!',
-            features
-          })
-        }
-        res.status(200).send({
-          message: 'Features were retrieved successfully!',
-          features
-        })
-      })
-      .catch(err => {
-        res.status(500).send({ message: err.message })
-      })
+    }
+  } catch (error) {
+    res.status(500).send({ message: error.message })
   }
 }
 
-exports.updateFeature = (req, res) => {
+exports.updateFeature = async (req, res) => {
   const id = req.query.id
+  const { name } = req.body
 
-  if (id) {
-    // if id is present, update the feature with the given id
-    Feature.findOne({
+  if (!id) return res.status(400).send({ message: 'Please provide a feature id.' })
+
+  try {
+    const feature = await Feature.findOne({
       where: {
         id
       }
     })
-      .then(feature => {
-        if (!feature) return res.status(404).send({ message: 'Feature Not found.' })
-        feature.update({
-          name: req.body.name
-        })
-          .then(feature => {
-            res.status(200).send({
-              message: 'Feature was updated successfully!',
-              feature
-            })
-          })
-          .catch(err => {
-            res.status(500).send({ message: err.message })
-          })
-      })
-      .catch(err => {
-        res.status(500).send({ message: err.message })
-      })
-  } else {
-    // if id is not present, return an error
-    res.status(400).send({ message: 'Feature id is required!' })
+
+    if (!feature) return res.status(404).send({ message: 'Feature Not found.' })
+
+    const updatedFeature = await feature.update({
+      name
+    })
+
+    res.status(200).send({
+      message: 'Feature was updated successfully!',
+      updatedFeature
+    })
+  } catch (error) {
+    res.status(500).send({ message: error.message })
   }
 }
 
-exports.deleteFeature = (req, res) => {
+exports.deleteFeature = async (req, res) => {
   const id = req.query.id
 
-  if (id) {
-    // if id is present, delete the feature with the given id
-    Feature.findOne({
+  if (!id) return res.status(400).send({ message: 'Please provide a feature id.' })
+
+  try {
+    const feature = await Feature.findOne({
       where: {
         id
       }
     })
-      .then(feature => {
-        if (!feature) {
-          return res.status(404).send({ message: 'Feature Not found.' })
-        }
-        feature.destroy()
-          .then(() => {
-            res.status(200).send({
-              message: 'Feature was deleted successfully!'
-            })
-          })
-          .catch(err => {
-            res.status(500).send({ message: err.message })
-          })
-      })
-      .catch(err => {
-        res.status(500).send({ message: err.message })
-      })
-  } else {
-    // if id is not present, return an error
-    res.status(400).send({ message: 'Feature id is required!' })
+
+    if (!feature) return res.status(404).send({ message: 'Feature Not found.' })
+
+    await feature.destroy()
+
+    res.status(200).send({
+      message: 'Feature was deleted successfully!'
+    })
+  } catch (error) {
+    res.status(500).send({ message: error.message })
   }
 }

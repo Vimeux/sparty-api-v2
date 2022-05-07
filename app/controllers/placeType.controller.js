@@ -1,117 +1,100 @@
 const db = require('../models')
 const PlaceType = db.placeType
 
-exports.createPlaceType = (req, res) => {
-  PlaceType.create({
-    name: req.body.name
-  })
-    .then(placeType => {
+exports.createPlaceType = async (req, res) => {
+  const { name } = req.body
+
+  if (!name) return res.status(400).send({ message: 'Please fill all the required fields.' })
+
+  try {
+    const placeType = await PlaceType.create({
+      name
+    })
+
+    res.status(201).send({
+      message: 'PlaceType was created successfully!',
+      placeType
+    })
+  } catch (error) {
+    res.status(500).send({ message: error.message })
+  }
+}
+
+exports.getPlaceType = async (req, res) => {
+  const id = req.query.id
+
+  try {
+    if (id) {
+      const placeType = await PlaceType.findOne({
+        where: {
+          id
+        }
+      })
+
       res.status(200).send({
-        message: 'PlaceType was created successfully!',
+        message: 'PlaceType was found successfully!',
         placeType
       })
-    })
-    .catch(err => {
-      res.status(500).send({ message: err.message })
-    })
-}
+    } else {
+      const placeTypes = await PlaceType.findAll()
 
-exports.getPlaceType = (req, res) => {
-  const id = req.query.id
-  if (id) {
-    // if id is present, get the placeType with the given id
-    PlaceType.findOne({
-      where: {
-        id
-      }
-    })
-      .then(placeType => {
-        res.status(200).send({
-          message: 'PlaceType was retrieved successfully!',
-          placeType
-        })
+      res.status(200).send({
+        message: 'PlaceTypes were found successfully!',
+        placeTypes
       })
-      .catch(err => {
-        res.status(500).send({ message: err.message })
-      })
-  } else {
-    // if id is not present, get all placeTypes
-    PlaceType.findAll()
-      .then(placeTypes => {
-        if (placeTypes.length <= 0) {
-          res.status(200).send({
-            message: 'No placeTypes found!',
-            placeTypes
-          })
-        }
-        res.status(200).send({
-          message: 'PlaceTypes were retrieved successfully!',
-          placeTypes
-        })
-      })
-      .catch(err => {
-        res.status(500).send({ message: err.message })
-      })
+    }
+  } catch (error) {
+    res.status(500).send({ message: error.message })
   }
 }
 
-exports.updatePlaceType = (req, res) => {
+exports.updatePlaceType = async (req, res) => {
   const id = req.query.id
-  if (id) {
-    // if id is present, update the placeType with the given id
-    PlaceType.findOne({
+  const { name } = req.body
+
+  if (!id) return res.status(400).send({ message: 'Please provide a placeType id.' })
+  if (!name) return res.status(400).send({ message: 'Please provide a placeType name.' })
+
+  try {
+    const placeType = await PlaceType.findOne({
       where: {
         id
       }
     })
-      .then(placeType => {
-        if (!placeType) return res.status(404).send({ message: 'PlaceType not found!' })
-        placeType.update({
-          name: req.body.name
-        })
-          .then(placeType => {
-            res.status(200).send({
-              message: 'PlaceType was updated successfully!',
-              placeType
-            })
-          })
-          .catch(err => {
-            res.status(500).send({ message: err.message })
-          })
-      })
-      .catch(err => {
-        res.status(500).send({ message: err.message })
-      })
-  } else {
-    res.status(400).send({ message: 'Id is required!' })
+    if (!placeType) return res.status(404).send({ message: 'PlaceType not found!' })
+
+    const updatedPlaceType = await placeType.update({
+      name
+    })
+
+    res.status(200).send({
+      message: 'PlaceType was updated successfully!',
+      updatedPlaceType
+    })
+  } catch (error) {
+    res.status(500).send({ message: error.message })
   }
 }
 
-exports.deletePlaceType = (req, res) => {
+exports.deletePlaceType = async (req, res) => {
   const id = req.query.id
-  if (id) {
-    // if id is present, delete the placeType with the given id
-    PlaceType.findOne({
+
+  if (!id) return res.status(400).send({ message: 'Please provide a placeType id.' })
+
+  try {
+    const placeType = await PlaceType.findOne({
       where: {
         id
       }
     })
-      .then(placeType => {
-        if (!placeType) return res.status(404).send({ message: 'PlaceType not found!' })
-        placeType.destroy()
-          .then(() => {
-            res.status(200).send({
-              message: 'PlaceType was deleted successfully!'
-            })
-          })
-          .catch(err => {
-            res.status(500).send({ message: err.message })
-          })
-      })
-      .catch(err => {
-        res.status(500).send({ message: err.message })
-      })
-  } else {
-    res.status(400).send({ message: 'Id is required!' })
+    if (!placeType) return res.status(404).send({ message: 'PlaceType not found!' })
+
+    await placeType.destroy()
+
+    res.status(200).send({
+      message: 'PlaceType was deleted successfully!'
+    })
+  } catch (error) {
+    res.status(500).send({ message: error.message })
   }
 }

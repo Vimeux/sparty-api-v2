@@ -99,5 +99,24 @@ db.product.belongsToMany(db.party, {
   otherKey: 'partyId'
 })
 
+// relation to participate in party
+const PartyUser = sequelize.define('partyUser', {
+  budgetParticiaption: {
+    type: Sequelize.INTEGER
+  }
+}, { timestamps: false })
+
+db.party.belongsToMany(db.user, {
+  through: PartyUser,
+  foreignKey: 'partyId',
+  otherKey: 'userId'
+})
+
+db.user.belongsToMany(db.party, {
+  through: PartyUser,
+  foreignKey: 'userId',
+  otherKey: 'partyId'
+})
+
 db.ROLES = ['user', 'admin', 'moderator']
 module.exports = db

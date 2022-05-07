@@ -7,123 +7,128 @@ const bcrypt = require('bcryptjs')
 const { generateToken } = require('../helpers/tokenHelper')
 const { extractIdFromRequestAuthHeader } = require('../helpers/tokenHelper')
 
-exports.signup = (req, res) => {
+exports.signup = async (req, res) => {
   // Save User to Database
-  User.create({
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
-    email: req.body.email,
-    password: bcrypt.hashSync(req.body.password, 8),
-    phone: req.body.phone
-  })
-    .then(user => {
-      if (req.body.roles) {
-        // si l'utilisateur possède un rôle dans la requête
-        Role.findAll({
-          where: {
-            name: {
-              [Op.or]: req.body.roles
-            }
-          }
-        }).then(roles => {
-          user.setRoles(roles)
-        })
-      } else {
-        // si l'utilisateur n'a pas de rôle dans la requête, on lui attribue le rôle user par défaut
-        // user role = 1
-        user.setRoles([1])
-      }
-      // génération du token
-      generateToken({ id: user.id }, (error, token) => {
-        if (error) return res.status(500).send('Error while genrating token')
+  const { email, password, firstName, lastName, phone, roles } = req.body
 
-        const authorities = []
-        user.getRoles().then(roles => {
-          for (let i = 0; i < roles.length; i++) {
-            authorities.push('ROLE_' + roles[i].name.toUpperCase())
+  if (!email || !password || !firstName || !lastName || !phone) return res.status(400).send({ message: 'Please fill all the required fields.' })
+
+  try {
+    const user = await User.create({
+      email,
+      password: bcrypt.hashSync(password, 8),
+      firstName,
+      lastName,
+      phone
+    })
+    if (!user) return res.status(400).send({ message: 'User does not exist.' })
+
+    if (roles) {
+      const role = await Role.findAll({
+        where: {
+          name: {
+            [Op.or]: roles
           }
-          res.status(200).send({
-            user,
-            accessToken: token
-          })
-        })
+        }
       })
-    })
-    .catch(err => {
-      res.status(500).send({ message: err.message })
-    })
-}
-
-exports.signin = (req, res) => {
-  User.findOne({
-    where: {
-      email: req.body.email
+      if (!role) return res.status(400).send({ message: 'Role does not exist.' })
+      await user.setRoles(role)
+    } else {
+      await user.setRoles([1])
     }
-  })
-    .then(user => {
-      if (!user) return res.status(404).send({ message: 'User Not found.' })
-      const passwordIsValid = bcrypt.compareSync(
-        req.body.password,
-        user.password
-      )
-      if (!passwordIsValid) {
-        return res.status(401).send({
-          accessToken: null,
-          message: 'Invalid Password!'
-        })
-      }
-      // génération du token
-      generateToken({ id: user.id }, (error, token) => {
-        if (error) return res.status(500).send('Error while genrating token')
 
-        const authorities = []
-        user.getRoles().then(roles => {
-          for (let i = 0; i < roles.length; i++) {
-            authorities.push('ROLE_' + roles[i].name.toUpperCase())
-          }
-          res.status(200).send({
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            roles: authorities,
-            accessToken: token
-          })
+    // génération du token
+    generateToken({ id: user.id }, (error, token) => {
+      if (error) return res.status(500).send('Error while genrating token')
+
+      const authorities = []
+      const userRoles = user.getRoles()
+      for (let i = 0; i < userRoles.length; i++) {
+        authorities.push('ROLE_' + userRoles[i].name.toUpperCase())
+      }
+      res.status(200).send({
+        user,
+        accessToken: token
+      })
+    })
+  } catch (error) {
+    return res.status(500).send({ message: error.message })
+  }
+}
+
+exports.signin = async (req, res) => {
+  const { email, password } = req.body
+
+  if (!email || !password) return res.status(400).send({ message: 'Please fill all the required fields.' })
+
+  try {
+    const user = await User.findOne({
+      where: {
+        email
+      }
+    })
+    if (!user) return res.status(400).send({ message: 'User does not exist.' })
+
+    const isPasswordValid = bcrypt.compareSync(password, user.password)
+    if (!isPasswordValid) return res.status(400).send({ message: 'Invalid password.' })
+
+    // génération du token
+    generateToken({ id: user.id }, (error, token) => {
+      if (error) return res.status(500).send('Error while genrating token')
+
+      const authorities = []
+      user.getRoles().then(roles => {
+        for (let i = 0; i < roles.length; i++) {
+          authorities.push('ROLE_' + roles[i].name.toUpperCase())
+        }
+        res.status(200).send({
+          user,
+          accessToken: token
         })
       })
     })
-    .catch(err => {
-      res.status(500).send({ message: err.message })
-    })
+  } catch (error) {
+    return res.status(500).send({ message: error.message })
+  }
 }
 
-exports.getUser = (req, res) => {
+exports.getUser = async (req, res) => {
   const id = extractIdFromRequestAuthHeader(req)
 
-  User.findByPk(id)
-    .then(user => {
-      if (!user) {
-        return res.status(404).send({
-          message: 'User not found.'
-        })
-      }
-      res.status(200).send(user)
-    })
+  try {
+    const user = await User.findByPk(id)
+    if (!user) return res.status(400).send({ message: 'User does not exist.' })
+
+    res.send(user)
+  } catch (error) {
+    return res.status(500).send({ message: error.message })
+  }
 }
 
-exports.deleteUser = (req, res) => {
+exports.deleteUser = async (req, res) => {
   const id = extractIdFromRequestAuthHeader(req)
+
+  try {
+    const user = await User.findByPk(id)
+    if (!user) return res.status(400).send({ message: 'User does not exist.' })
+
+    await user.destroy()
+    res.send({ message: 'User deleted.' })
+  } catch (error) {
+    return res.status(500).send({ message: error.message })
+  }
 
   // delete user by id
-  User.destroy({
-    where: {
-      id
-    }
-  })
-    .then(user => {
-      if (!user) {
-        return res.status(404).send({ message: 'User Not found.' })
-      } else {
-        res.send({ message: 'User deleted successfully!' })
-      }
-    })
+  // User.destroy({
+  //   where: {
+  //     id
+  //   }
+  // })
+  //   .then(user => {
+  //     if (!user) {
+  //       return res.status(404).send({ message: 'User Not found.' })
+  //     } else {
+  //       res.send({ message: 'User deleted successfully!' })
+  //     }
+  //   })
 }
