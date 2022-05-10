@@ -102,7 +102,8 @@ db.product.belongsToMany(db.party, {
 // relation to participate in party
 const PartyUser = sequelize.define('partyUser', {
   budgetParticiaption: {
-    type: Sequelize.INTEGER
+    type: Sequelize.INTEGER,
+    allowNull: false
   }
 }, { timestamps: false })
 
@@ -116,6 +117,41 @@ db.user.belongsToMany(db.party, {
   through: PartyUser,
   foreignKey: 'userId',
   otherKey: 'partyId'
+})
+
+// relation to book place
+const Booking = sequelize.define('booking', {
+  bookingId: {
+    type: Sequelize.UUID,
+    defaultValue: Sequelize.UUIDV4,
+    primaryKey: true
+  },
+  checkInDate: {
+    type: Sequelize.DATE,
+    allowNull: false
+  },
+  checkOutDate: {
+    type: Sequelize.DATE,
+    allowNull: false
+  },
+  cancelDate: {
+    type: Sequelize.DATE
+  },
+  bookingDate: {
+    type: Sequelize.DATE
+  }
+}, { timestamps: false })
+
+db.place.belongsToMany(db.user, {
+  through: Booking,
+  foreignKey: 'placeId',
+  otherKey: 'userId'
+})
+
+db.user.belongsToMany(db.place, {
+  through: Booking,
+  foreignKey: 'userId',
+  otherKey: 'placeId'
 })
 
 db.ROLES = ['user', 'admin', 'moderator']

@@ -51,8 +51,6 @@ exports.createPlace = async (req, res) => {
 exports.getPlace = async (req, res) => {
   const id = req.query.id
 
-  if (!id) return res.status(400).send({ message: 'Please provide a place id.' })
-
   try {
     if (id) {
       const place = await Place.findOne({

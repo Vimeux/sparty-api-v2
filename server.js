@@ -53,6 +53,7 @@ require('./app/routes/placeType.routes')(app)
 require('./app/routes/party.routes')(app)
 require('./app/routes/product.routes')(app)
 require('./app/routes/participation.routes')(app)
+require('./app/routes/booking.routes')(app)
 
 // set port, listen for requests
 const PORT = process.env.PORT || 4000
