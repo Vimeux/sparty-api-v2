@@ -1,5 +1,6 @@
 const controller = require('../controllers/booking.controller')
 const authJwt = require('../middleware/authJwt')
+const bookingCheck = require('../middleware/bookingCheck')
 
 module.exports = function (app) {
   app.use(function (req, res, next) {
@@ -13,7 +14,8 @@ module.exports = function (app) {
   app.post(
     '/api/booking',
     [
-      authJwt.verifyToken
+      authJwt.verifyToken,
+      bookingCheck.checkBookingExisted
     ],
     controller.createBooking
   )
@@ -32,5 +34,21 @@ module.exports = function (app) {
       authJwt.verifyToken
     ],
     controller.getBookingByPlace
+  )
+
+  app.put(
+    '/api/booking',
+    [
+      authJwt.verifyToken
+    ],
+    controller.updateBooking
+  )
+
+  app.delete(
+    '/api/booking',
+    [
+      authJwt.verifyToken
+    ],
+    controller.deleteBooking
   )
 }
