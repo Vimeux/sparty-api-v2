@@ -59,6 +59,10 @@ exports.getPlace = async (req, res) => {
         },
         include: [
           {
+            model: db.user,
+            attributes: ['id', 'firstName', 'lastName', 'email']
+          },
+          {
             model: Feature,
             as: 'features'
           },
@@ -80,6 +84,10 @@ exports.getPlace = async (req, res) => {
     } else {
       const places = await Place.findAll({
         include: [
+          {
+            model: db.user,
+            attributes: ['id', 'firstName', 'lastName', 'email']
+          },
           {
             model: Feature,
             as: 'features'
