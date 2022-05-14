@@ -39,7 +39,8 @@ module.exports = function (app) {
   app.put(
     '/api/booking',
     [
-      authJwt.verifyToken
+      authJwt.verifyToken,
+      bookingCheck.checkBookingExisted
     ],
     controller.updateBooking
   )

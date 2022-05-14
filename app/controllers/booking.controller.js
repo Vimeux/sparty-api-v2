@@ -2,6 +2,7 @@ const { extractIdFromRequestAuthHeader } = require('../helpers/tokenHelper')
 const db = require('../models')
 const Place = db.place
 const User = db.user
+const Booking = db.booking
 
 /**
  * Create a booking
@@ -31,11 +32,11 @@ exports.createBooking = async (req, res) => {
     })
     if (!user) return res.status(400).send({ message: 'User not found.' })
 
-    // const addedBooking = await place.addUser(user, { through: { checkInDate, checkOutDate } })
+    const addedBooking = await place.addUser(user, { through: { checkInDate, checkOutDate } })
 
     res.status(201).send({
-      message: 'Booking was created successfully!'
-      // booking: addedBooking
+      message: 'Booking was created successfully!',
+      booking: addedBooking
     })
   } catch (error) {
     res.status(500).send({ message: error.message })
@@ -138,32 +139,25 @@ exports.getBookingByPlace = async (req, res) => {
  */
 exports.updateBooking = async (req, res) => {
   const userId = extractIdFromRequestAuthHeader(req)
-  const id = req.query.id
-  const { checkInDate, checkOutDate } = req.body
+  const { bookingId, checkInDate, checkOutDate } = req.body
 
   try {
-    console.log(id)
-    const place = await Place.findOne({
+    const booking = await Booking.findOne({
       where: {
-        id
+        bookingId
       }
     })
 
-    if (!place) return res.status(400).send({ message: 'Place not found.' })
+    if (booking.userId !== userId) return res.status(400).send({ message: 'You are not authorized to update this booking.' })
 
-    const user = await User.findOne({
-      where: {
-        id: userId
-      }
+    const bookingUpdated = await booking.update({
+      checkInDate,
+      checkOutDate
     })
-
-    if (!user) return res.status(400).send({ message: 'User not found.' })
-
-    const updatedBooking = await place.setUsers(user, { through: { checkInDate, checkOutDate } })
 
     res.status(200).send({
       message: 'Booking was updated successfully!',
-      updatedBooking
+      bookingUpdated
     })
   } catch (error) {
     res.status(500).send({ message: error.message })
@@ -178,26 +172,19 @@ exports.updateBooking = async (req, res) => {
  */
 exports.deleteBooking = async (req, res) => {
   const userId = extractIdFromRequestAuthHeader(req)
-  const id = req.query.id
+  const bookingId = req.query.id
 
   try {
-    const place = await Place.findOne({
+    const booking = await Booking.findOne({
       where: {
-        id
+        bookingId
       }
     })
 
-    if (!place) return res.status(400).send({ message: 'Place not found.' })
+    if (!booking) return res.status(400).send({ message: 'Booking not found.' })
+    if (booking.userId !== userId) return res.status(400).send({ message: 'You are not authorized to delete this booking.' })
 
-    const user = await User.findOne({
-      where: {
-        id: userId
-      }
-    })
-
-    if (!user) return res.status(400).send({ message: 'User not found.' })
-
-    const bookingDeleted = await place.removeUser(user)
+    const bookingDeleted = await booking.destroy()
 
     res.status(200).send({
       message: 'Booking was deleted successfully!',
