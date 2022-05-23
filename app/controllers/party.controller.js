@@ -5,12 +5,13 @@ const Product = db.product
 
 exports.createParty = async (req, res) => {
   const id = extractIdFromRequestAuthHeader(req)
-  const { budget, invitationCode, date, maxPersonn, products } = req.body
+  const { name, budget, invitationCode, date, maxPersonn, products } = req.body
 
-  if (!budget || !invitationCode || !date || !maxPersonn) return res.status(400).send({ message: 'Please fill all the required fields.' })
+  if (!name || !budget || !invitationCode || !date || !maxPersonn) return res.status(400).send({ message: 'Please fill all the required fields.' })
 
   try {
     const party = await Party.create({
+      name,
       budget,
       invitationCode,
       date,
@@ -75,12 +76,12 @@ exports.getParty = async (req, res) => {
       // Check if party exists
       if (!party) return res.status(404).send({ message: 'Party Not found.' })
       // Check if party belongs to user
-      if (party.userId !== userid) return res.status(401).send({ message: 'Unauthorized.' })
       return res.status(200).send({
         message: 'Party was retrieved successfully!',
         party
       })
     } else {
+      // get all parties and participation of user
       const parties = await Party.findAll({
         where: {
           userId: userid
@@ -101,9 +102,24 @@ exports.getParty = async (req, res) => {
       })
       // Check if parties exists
       if (!parties) return res.status(404).send({ message: 'No parties found!' })
+
+      const participation = await Party.findAll({
+        include: [
+          {
+            model: db.user,
+            as: 'users',
+            attributes: ['id', 'firstName', 'lastName', 'email'],
+            where: {
+              id: userid
+            }
+          }
+        ]
+      })
+
       return res.status(200).send({
         message: 'Parties were retrieved successfully!',
-        parties
+        parties,
+        participation
       })
     }
   } catch (error) {

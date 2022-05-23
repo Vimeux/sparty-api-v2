@@ -30,6 +30,7 @@ db.placeType = require('../models/placeType.model.js')(sequelize, Sequelize)
 db.party = require('../models/party.model.js')(sequelize, Sequelize)
 db.product = require('../models/product.model.js')(sequelize, Sequelize)
 db.booking = require('../models/booking.model.js')(sequelize, Sequelize)
+db.partyUser = require('../models/partyUser.model.js')(sequelize, Sequelize)
 
 // relation between user and role
 db.role.belongsToMany(db.user, {
@@ -101,21 +102,14 @@ db.product.belongsToMany(db.party, {
 })
 
 // relation to participate in party
-const PartyUser = sequelize.define('partyUser', {
-  budgetParticiaption: {
-    type: Sequelize.INTEGER,
-    allowNull: false
-  }
-}, { timestamps: false })
-
 db.party.belongsToMany(db.user, {
-  through: PartyUser,
+  through: db.partyUser,
   foreignKey: 'partyId',
   otherKey: 'userId'
 })
 
 db.user.belongsToMany(db.party, {
-  through: PartyUser,
+  through: db.partyUser,
   foreignKey: 'userId',
   otherKey: 'partyId'
 })

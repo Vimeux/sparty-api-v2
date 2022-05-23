@@ -21,7 +21,7 @@ module.exports = function (app) {
   )
 
   app.get(
-    '/api/party',
+    '/api/parties',
     [
       authJwt.verifyToken
     ],

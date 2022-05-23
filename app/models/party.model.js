@@ -5,6 +5,10 @@ module.exports = (sequelize, Sequelize) => {
       defaultValue: Sequelize.UUIDV4,
       primaryKey: true
     },
+    name: {
+      type: Sequelize.STRING,
+      allowNull: false
+    },
     budget: {
       type: Sequelize.INTEGER,
       allowNull: false
