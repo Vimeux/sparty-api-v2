@@ -11,7 +11,7 @@ exports.signup = async (req, res) => {
   // Save User to Database
   const { email, password, firstName, lastName, phone, roles } = req.body
 
-  if (!email || !password || !firstName || !lastName || !phone) return res.status(400).send({ message: 'Please fill all the required fields.' })
+  if (!email || !password || !firstName || !lastName) return res.status(400).send({ message: 'Please fill all the required fields.' })
 
   try {
     const user = await User.create({
